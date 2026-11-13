@@ -14,10 +14,13 @@ export function normalizeCloudServerURL(input: string): string | null {
   }
   if (!url.hostname) return null
   // The app sends its session token to the server, so plain HTTP is only for this computer, as
-  // with MCP servers.
+  // with MCP servers, or for the server this editor was itself loaded from over plain HTTP, such
+  // as one on a home network: the page already travels over that connection.
   const loopback =
     url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]'
-  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) return null
+  const servingOrigin = url.origin === globalThis.location?.origin
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && (loopback || servingOrigin)))
+    return null
   if (url.username || url.password) return null
   url.search = ''
   url.hash = ''
